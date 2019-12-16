@@ -20,18 +20,21 @@ class BigInt{
 		
 };
 
-BigInt operator + (BigInt &a, BigInt &b);
-BigInt operator - (BigInt &a, BigInt &b);
-BigInt operator * (BigInt &a, BigInt &b);
-BigInt operator / (BigInt &a, BigInt &b);
-bool operator > (BigInt &a, BigInt &b);
-bool operator >= (BigInt &a, BigInt &b);
-bool operator < (BigInt &a, BigInt &b);
-bool operator <= (BigInt &a, BigInt &b);
-bool operator == (BigInt &a, BigInt &b);
-bool operator != (BigInt &a, BigInt &b);
-BigInt operator << (BigInt &a, int b);
-bool absolute_cmp(BigInt &a, BigInt &b);
+ostream & operator << (ostream &os, BigInt a);
+BigInt operator << (BigInt a, int b);
+bool operator > (BigInt a, BigInt b);
+bool operator >= (BigInt a, BigInt b);
+bool operator < (BigInt a, BigInt b);
+bool operator <= (BigInt a, BigInt b);
+bool operator == (BigInt a, BigInt b);
+bool operator != (BigInt a, BigInt b);
+BigInt operator + (BigInt a, BigInt b);
+BigInt operator - (BigInt a, BigInt b);
+BigInt operator * (BigInt a, BigInt b);
+BigInt operator / (BigInt a, BigInt b);
+bool absolute_cmp(BigInt a, BigInt b);
+BigInt update(BigInt a);
+
 
 BigInt::BigInt(string s){
 	if(s.substr(0,1).c_str()[0] == '-'){
@@ -72,7 +75,7 @@ ostream & operator << (ostream &os, BigInt a){
 	os << ""; // I don't know why this must be put here;
 }
 
-BigInt operator + (BigInt &a, BigInt &b){
+BigInt operator + (BigInt a, BigInt b){
 	BigInt BI("0");
 	
 	// if one is below 0 and the other is above 0, then sub them
@@ -98,7 +101,7 @@ BigInt operator + (BigInt &a, BigInt &b){
 	return BI;
 }
 
-BigInt operator - (BigInt &a, BigInt &b){
+BigInt operator - (BigInt a, BigInt b){
 	BigInt BI("0");
 	if(a.neg == b.neg){
 		if(a.neg == 0){
@@ -126,7 +129,7 @@ BigInt operator - (BigInt &a, BigInt &b){
 		BI.n = i++;
 	}
 	
-	// to cut of leading zero(s)
+	// to cut off leading zero(s)
 	i = BI.n;
 	while(i){
 		if(BI.num[i--] == 0)
@@ -137,30 +140,92 @@ BigInt operator - (BigInt &a, BigInt &b){
 	return BI;
 }
 
-BigInt operator * (BigInt &a, BigInt &b){
+BigInt operator * (BigInt a, BigInt b){
 	BigInt BI("0");
-	if(a.neg != b.neg)
-		BI.neg = 1;
+	BI.neg = a.neg != b.neg;
 	
 	if(absolute_cmp(b, a))
 		return b * a;
 	
 	
 	for(int i = 0; i <= a.n; i++){
-		BigInt t("0");
-		t.num[0] = a.num[i];
-		
-		
-		
-		
+		BigInt t = b;
+		int p = a.num[i];
+		for(int j = 0; j <= b.n; j++)
+			t.num[j] *= p;
+		update(t);
+
+
 		t = t << i;
 		BI = BI + t;
+	}
+	
+	update(BI);
+	
+	// to cut off leading zero(s)
+	int i = BI.n;
+	while(i){
+		if(BI.num[i--] == 0)
+			BI.n--;
+		else break;
 	}
 	
 	return BI;
 }
 
-bool operator < (BigInt &a, BigInt &b){
+BigInt operator / (BigInt a, BigInt b){
+	BigInt q("0");
+	const BigInt ZERO("0");
+	if(b == ZERO)
+		throw "Division by zero condition!";
+		
+	q.neg = a.neg != b.neg;
+	// if a < b
+	if(absolute_cmp(a, b))
+		return q;
+	
+	
+	int n = a.n, t = b.n;
+	for(int j = 0; j <= n-t; j++)
+		q.num[j] = 0;
+	q.n = n - t;
+	if(a >= (b << (n-t))){
+		q.num[n-t]++;
+		a = a - (b << (n-t));
+	}
+	
+	
+	const int mod = pow(10, Digit_Per_Num);
+	
+	for(int i = n; i >= t+1; i--){
+		if(a.num[i] == b.num[i])
+			q.num[i-t-1] = mod - 1;
+		else
+			q.num[i-t-1] = (a.num[i] * mod + a.num[i-1]) / b.num[t];
+		
+		if(q.num[i-t-1] * (b.num[t] * mod + b.num[t-1]) > a.num[i] * mod * mod + a.num[i-1] * mod + a.num[i-2])
+			q.num[i-t-1] = q.num[i-t-1] - 1;
+		
+		
+		BigInt TEMP("0");
+		for(int j = 0; j <= b.n; j++)
+			TEMP.num[j] = q.num[i-t-1] * b.num[j];
+		TEMP.n = b.n+1;
+		update(TEMP);
+		
+		a = a - (TEMP << (i-t-1));
+		
+		if(a < ZERO){
+			a = a + (b << (i-t-1));
+			q.num[i-t-1] = q.num[i-t-1] - 1;
+		}
+		
+	}
+	
+	return q;
+}
+
+bool operator < (BigInt a, BigInt b){
 	if(a.neg != b.neg)
 		return b.neg == true;
 	
@@ -170,27 +235,27 @@ bool operator < (BigInt &a, BigInt &b){
 		return !absolute_cmp(a, b);
 }
 
-bool operator > (BigInt &a, BigInt &b){
+bool operator > (BigInt a, BigInt b){
 	return !(a<b) && a!=b;
 }
 
-bool operator == (BigInt &a, BigInt &b){
+bool operator == (BigInt a, BigInt b){
 	return a.neg==b.neg && !absolute_cmp(a,b) && !absolute_cmp(b,a);
 }
 
-bool operator != (BigInt &a, BigInt &b){
+bool operator != (BigInt a, BigInt b){
 	return !(a==b);
 }
 
-bool operator <= (BigInt &a, BigInt &b){
+bool operator <= (BigInt a, BigInt b){
 	return !(a>b);
 }
 
-bool operator >= (BigInt &a, BigInt &b){
+bool operator >= (BigInt a, BigInt b){
 	return !(a<b);
 }
 
-BigInt operator << (BigInt &a, int b){
+BigInt operator << (BigInt a, int b){
 	if(b == 0)
 		return a;
 		
@@ -207,13 +272,27 @@ BigInt operator << (BigInt &a, int b){
 
 
 // to judge if |a| < |b|
-bool absolute_cmp(BigInt &a, BigInt &b){
+bool absolute_cmp(BigInt a, BigInt b){
 	if(a.n != b.n)
 		return a.n < b.n;
 	for(int i = a.n; i+1; i--)
 		if(a.num[i] != b.num[i])
 			return a.num[i] < b.num[i];
 	return false;
+}
+
+BigInt update(BigInt a){
+	int mod = pow(10, Digit_Per_Num);
+	int ci = 0;
+	for(int i = 0; i <= a.n; i++){
+		a.num[i] += ci;
+		ci = a.num[i] / mod;
+		a.num[i] %= mod; 		
+	}
+	
+	if(ci)
+		a.num[++a.n] = ci;
+	
 }
 
 int main(){
@@ -231,6 +310,6 @@ int main(){
 
 	cout << "a + b = " << a + b << endl;
 	cout << "a - b = " << a - b << endl;
-	//cout << "a * b = " << a * b << endl;
-	//cout << "a / b = " << a / b << endl;
+	cout << "a * b = " << a * b << endl;
+	cout << "a / b = " << a / b << endl << "remainder:" << a - (a/b) << endl;
 } 
