@@ -7,8 +7,8 @@ for i in range(1000):
 
     f1 = open("out.txt","r")
     f2 = open("in.txt","w")
-    a = random.randint(100000000000000000000,10000000000000000000000000000000000)
-    b = random.randint(1,100000000000000000000)
+    a = random.randint(2**512,2**1024)
+    b = random.randint(1,2**512)
     f2.write("{} {}".format(a,b))
     f2.close()
     os.system("main.exe {}".format(option))

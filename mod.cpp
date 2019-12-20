@@ -36,6 +36,7 @@ BigInt operator + (BigInt a, BigInt b);
 BigInt operator - (BigInt a, BigInt b);
 BigInt operator * (BigInt a, BigInt b);
 BigInt operator / (BigInt a, BigInt b);
+BigInt operator % (BigInt a, BigInt b);
 bool absolute_cmp(BigInt a, BigInt b);
 BigInt pushup(BigInt &a);
 BigInt pushdown(BigInt &a);
@@ -110,7 +111,7 @@ BigInt operator + (BigInt a, BigInt b){
 }
 
 BigInt operator - (BigInt a, BigInt b){
-	BigInt BI("0");
+	BigInt BI;
 	if(a.neg == b.neg){
 		if(absolute_cmp(a, b))
 			return -(b-a);
@@ -179,12 +180,19 @@ BigInt operator / (BigInt a, BigInt b){
 		return ZERO;
 	
 	q.neg = a.neg != b.neg;
-	a.neg = b.neg = 0; 
-	q.n = a.n - b.n;
+	a.neg = b.neg = 0;
 	
+	int flag = 1; 
 	BigInt t = b << (a.n - b.n);
+	
 	while(1){
-		while(a > t){
+		while(a >= t){
+			if(flag){
+				q.n = t.n - b.n;
+				flag = 0;
+				for(int i = 0; i <= q.n; i++)
+					q.num[i] = 0;
+			}
 			q.num[t.n - b.n]++;
 			a = a - t;
 		}
@@ -195,8 +203,12 @@ BigInt operator / (BigInt a, BigInt b){
 		t = t >> 1;
 	}
 	
-	pushdown(q);
+	
 	return q;
+}
+
+BigInt operator % (BigInt a, BigInt b){
+	return a - (a/b)*b;
 }
 
 bool operator < (BigInt a, BigInt b){
@@ -303,25 +315,33 @@ BigInt pushdown(BigInt &a){
 	return a;
 }
 
-int main(int argc, char *argv[]){
-	freopen("in.txt","r",stdin);
-	freopen("out.txt","w",stdout);
-	string s;
-	cin >> s;
-	BigInt a(s);
+BigInt pow(BigInt x, BigInt y, BigInt mod){
+	BigInt base = x % mod;
+	BigInt r("1");
+	const BigInt ZERO("0");
+	const BigInt TWO("2");
 	
-	cin >> s;
-	BigInt b(s);
+	while(y != ZERO){
+		if(y.num[0] & 1) r = (r * base) % mod;
+		base = (base * base) % mod;
+		y = y / TWO;
+	}
+	
+	return r;
+}
 
+int main(){
+	string s;
+	cout << "please input x, y, m which stands for x^y mod m:" << endl;
+	cin >> s;
+	BigInt x(s);
 	
-	if(argv[1][0] == '+')
-		cout << a+b;
-	else if(argv[1][0] == '-')
-		cout << a-b;
-	else if(argv[1][0] == '*')
-		cout << a*b;
-	else if(argv[1][0] == '/')
-		cout << a/b;
+	cin >> s;
+	BigInt y(s);
+	
+	cin >> s;
+	BigInt m(s);
 	
 	
+	cout << endl << "answer:" << pow(x, y, m); 
 }

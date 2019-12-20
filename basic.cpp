@@ -5,11 +5,13 @@
 #include<cmath>
 using namespace std; 
 
-const int Digit_Per_Num = 1;
+const int Digit_Per_Num = 2;
 //digits to be stored into an int(accept range:(1-2));
 class BigInt{
 	public:
 		int num[1000]; // both int and longlong are valid
+		//If you require more digits, just raise the memory limit 
+		
 		int n;
 		int neg;// is it a negative number
 		BigInt(){
@@ -310,25 +312,25 @@ BigInt pushdown(BigInt &a){
 	return a;
 }
 
-int main(int argc, char *argv[]){
-	freopen("in.txt","r",stdin);
-	freopen("out.txt","w",stdout);
+int main(){
 	string s;
+	
+	cout << "please input a:";
 	cin >> s;
 	BigInt a(s);
-	
+	cout << "please input b:";
 	cin >> s;
 	BigInt b(s);
+	cout << "you just input:" << endl << endl;
+	cout << "a =     " << a << endl << endl;
+	cout << "b =     " << b << endl << endl;
 
-	
-	if(argv[1][0] == '+')
-		cout << a+b;
-	else if(argv[1][0] == '-')
-		cout << a-b;
-	else if(argv[1][0] == '*')
-		cout << a*b;
-	else if(argv[1][0] == '/')
-		cout << a/b;
+	cout << "a + b = " << a + b << endl << endl;
+	cout << "a - b = " << a - b << endl << endl;
+	cout << "a * b = " << a * b << endl << endl;
+	cout << "a / b = " << a / b << endl << endl;
 	
 	
+	cout << "remainder:" << a-(a/b)*b << endl;
+	//cout << "a / b = " << "0" << endl << "remainder:" << "123456789" << endl;
 }
